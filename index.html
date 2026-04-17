@@ -29,6 +29,8 @@
       --r-orange:      #2A289D;
       --font:          'DM Sans', Arial, sans-serif;
       --content-scale: 1.12;
+      --slide1-scale: 1.2;
+      --slide3-scale: 1.03;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,11 +55,9 @@
       transform: scale(var(--content-scale));
       transform-origin: center center;
     }
-    .slide[data-slide="1"] > .content {
-      transform: scale(1.2);
-    }
+    .slide[data-slide="1"] > .content { transform: scale(var(--slide1-scale)); }
     .slide[data-slide="3"] > .content {
-      transform: scale(1.03);
+      transform: scale(var(--slide3-scale));
       transform-origin: center top;
       max-width: 1180px;
       padding-bottom: 76px;
@@ -605,6 +605,19 @@ let current = 1;
 const total = document.querySelectorAll('.slide').length;
 const dotsContainer = document.getElementById('dots');
 const counter = document.getElementById('counter');
+function applyViewportFitScale() {
+  const root = document.documentElement;
+  const vw = window.innerWidth || 1366;
+  const vh = window.innerHeight || 768;
+  const widthFit = (vw - 24) / 1440;
+  const heightFit = (vh - 110) / 900;
+  const fit = Math.max(0.82, Math.min(1, widthFit, heightFit));
+  root.style.setProperty('--content-scale', (1.12 * fit).toFixed(3));
+  root.style.setProperty('--slide1-scale', (1.2 * fit).toFixed(3));
+  root.style.setProperty('--slide3-scale', (1.03 * fit).toFixed(3));
+}
+window.addEventListener('resize', applyViewportFitScale);
+applyViewportFitScale();
 for (let i = 1; i <= total; i++) {
   const dot = document.createElement('div');
   dot.className = 'dot' + (i === 1 ? ' active' : '');
