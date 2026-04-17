@@ -59,8 +59,8 @@
     .slide[data-slide="3"] > .content {
       transform: scale(var(--slide3-scale));
       transform-origin: center top;
-      max-width: 1180px;
-      padding-bottom: 76px;
+      max-width: 1200px;
+      padding-bottom: 64px;
     }
 
     /* â”€â”€ Renesas logo watermark on every slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -614,7 +614,8 @@ function applyViewportFitScale() {
   const fit = Math.max(0.82, Math.min(1, widthFit, heightFit));
   root.style.setProperty('--content-scale', (1.12 * fit).toFixed(3));
   root.style.setProperty('--slide1-scale', (1.2 * fit).toFixed(3));
-  root.style.setProperty('--slide3-scale', (1.03 * fit).toFixed(3));
+  const slide3Scale = Math.max(0.98, 1.08 * fit);
+  root.style.setProperty('--slide3-scale', slide3Scale.toFixed(3));
 }
 window.addEventListener('resize', applyViewportFitScale);
 applyViewportFitScale();
