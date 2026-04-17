@@ -1,0 +1,667 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="slides-format" content="viewport">
+  <title>Internal AI Tools Overview â€” Renesas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <style>
+    /* â”€â”€ Renesas Brand Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    :root {
+      --r-blue:        #2A289D;
+      --r-light-blue:  #3B3AAA;
+      --r-hover-blue:  #4543CC;
+      --r-med-blue:    #131184;
+      --r-dark-blue:   #1C1B6E;
+      --r-sky:         #A4DFFF;
+      --r-lt-blue-bg:  #E5F0FB;
+      --r-slate-bg:    #EBF2FB;
+      --r-tint:        #F6F9FB;
+      --r-off-white:   #F0F0F0;
+      --r-black:       #1C1C1C;
+      --r-dark-gray:   #383838;
+      --r-gray:        #706F6F;
+      --r-light-gray:  #A9A8A8;
+      --r-white:       #FFFFFF;
+      --r-orange:      #2A289D;
+      --font:          'DM Sans', Arial, sans-serif;
+      --content-scale: 1.12;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--r-tint); height: 100vh; width: 100vw; overflow: hidden; }
+    body { font-family: var(--font); color: var(--r-black); }
+
+    /* â”€â”€ Deck & Slides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--r-tint);
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      pointer-events: none; overflow: hidden;
+    }
+    .slide.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+    .slide > .content {
+      position: relative; z-index: 2;
+      width: 100%; max-width: 1240px;
+      padding: clamp(1.2rem, 2.8vw, 2.4rem);
+      transform: scale(var(--content-scale));
+      transform-origin: center center;
+    }
+    .slide[data-slide="1"] > .content {
+      transform: scale(1.2);
+    }
+    .slide[data-slide="3"] > .content {
+      transform: scale(1.03);
+      transform-origin: center top;
+      max-width: 1180px;
+      padding-bottom: 76px;
+    }
+
+    /* â”€â”€ Renesas logo watermark on every slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .slide::after {
+      content: '';
+      position: absolute; bottom: 22px; right: 32px; z-index: 10;
+      width: 110px; height: 28px;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/2/2b/Renesas_Electronics_logo.svg') no-repeat center/contain;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    /* â”€â”€ Title / Cover slides (dark navy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .slide-dark {
+      background: var(--r-dark-blue);
+      color: var(--r-white);
+    }
+    .slide-dark::after {
+      background: url('https://companieslogo.com/img/orig/6723.T_BIG.D-6d723868.svg?t=1720244490') no-repeat center/contain;
+      opacity: 0.9;
+    }
+
+    /* â”€â”€ Geometric accent shapes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .geo-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .geo-rect {
+      position: absolute; border-radius: 3px;
+      background: rgba(42,40,157,0.06);
+    }
+    .slide-dark .geo-rect {
+      background: rgba(255,255,255,0.04);
+    }
+    .geo-circle {
+      position: absolute; border-radius: 50%;
+      border: 1px solid rgba(42,40,157,0.08);
+    }
+    .slide-dark .geo-circle {
+      border-color: rgba(255,255,255,0.06);
+    }
+
+    /* â”€â”€ Section label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .section-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--r-light-blue);
+    }
+    .slide-dark .section-label { color: var(--r-sky); }
+
+    /* â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .card {
+      background: var(--r-white);
+      border: 1px solid rgba(42,40,157,0.10);
+      border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(28,27,110,0.07);
+    }
+    .card-blue {
+      background: var(--r-blue);
+      color: var(--r-white);
+      border: none;
+      border-radius: 14px;
+    }
+    .card-tint {
+      background: var(--r-lt-blue-bg);
+      border: 1px solid rgba(42,40,157,0.10);
+      border-radius: 14px;
+    }
+    .card-slate {
+      background: var(--r-slate-bg);
+      border: 1px solid rgba(42,40,157,0.10);
+      border-radius: 14px;
+    }
+    .hero-card {
+      background: var(--r-white);
+      border: 1px solid rgba(42,40,157,0.10);
+      border-radius: 18px;
+      box-shadow: 0 8px 40px rgba(28,27,110,0.10);
+    }
+
+    /* â”€â”€ Badge / chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--r-lt-blue-bg);
+      color: var(--r-blue);
+      font-weight: 700; font-size: .78rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .badge-dark {
+      background: rgba(255,255,255,0.12);
+      color: var(--r-white);
+    }
+    .badge {
+      background: rgba(242,107,67,0.12);
+      color: var(--r-blue);
+    }
+
+    /* â”€â”€ Feature pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .pill {
+      background: var(--r-slate-bg);
+      border: 1px solid rgba(42,40,157,0.10);
+      border-radius: 8px;
+      padding: 9px 13px;
+      font-size: .88rem; font-weight: 600; color: var(--r-dark-blue);
+    }
+
+    /* â”€â”€ Nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .nav-controls {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 12px; z-index: 100;
+      background: var(--r-white); border: 1px solid rgba(42,40,157,0.12);
+      border-radius: 999px; padding: 8px 20px;
+      box-shadow: 0 6px 28px rgba(28,27,110,0.10);
+    }
+    .nav-btn {
+      width: 34px; height: 34px; border: none; cursor: pointer;
+      background: var(--r-lt-blue-bg); color: var(--r-blue);
+      border-radius: 50%; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .nav-btn:hover { background: var(--r-blue); color: var(--r-white); }
+    .slide-dots { display: flex; gap: 7px; }
+    .slide-dots .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(42,40,157,0.18); cursor: pointer; transition: .2s;
+    }
+    .slide-dots .dot.active { background: var(--r-blue); transform: scale(1.3); }
+    .slide-counter { font-size: .78rem; color: var(--r-gray); min-width: 40px; text-align: center; }
+
+    /* â”€â”€ Reveal animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .reveal { opacity: 0; transform: translateY(14px); }
+
+    /* â”€â”€ Grid helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .g2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; }
+    .g2-wide { display: grid; grid-template-columns: 1.1fr .9fr; gap: 20px; align-items: stretch; }
+    .g2-wide-r { display: grid; grid-template-columns: .9fr 1.1fr; gap: 20px; align-items: stretch; }
+    .pills { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px 14px; }
+    .shot { width:100%; height:100%; object-fit:contain; border-radius:10px; background:var(--r-off-white); display:block; }
+
+    /* â”€â”€ Orange accent left border on highlight cards â”€â”€â”€â”€â”€â”€â”€ */
+    .accent-left { border-left: 4px solid var(--r-blue); }
+
+    @media (max-width:900px) {
+      .g3,.g2,.g2-wide,.g2-wide-r,.pills { grid-template-columns: 1fr; }
+    }
+
+    /* â”€â”€ Title slide diagonal shape â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .title-diagonal {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 38%;
+      background: linear-gradient(135deg, rgba(42,40,157,0.35) 0%, rgba(28,27,110,0.55) 100%);
+      clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
+      z-index: 0; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- â•â• SLIDE 1 â€” Title/Cover â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide slide-dark active" data-slide="1">
+    <div class="geo-bg">
+      <div class="title-diagonal"></div>
+      <div class="geo-rect" style="width:320px;height:320px;top:-80px;right:5%;transform:rotate(20deg);opacity:.5;"></div>
+      <div class="geo-circle" style="width:500px;height:500px;bottom:-180px;left:-120px;"></div>
+      <div class="geo-circle" style="width:260px;height:260px;top:60px;right:8%;border-color:rgba(255,255,255,0.08);"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content" style="z-index:2;">
+      <div class="reveal" style="margin-bottom:20px;">
+        <span class="badge badge-dark" style="color:#fff;background:transparent;padding:0;border-radius:0;">Renesas Electronics Corporation &middot; April 2026</span>
+      </div>
+      <div class="reveal" style="font-size:clamp(36px,5.5vw,74px);line-height:1;font-weight:700;color:#fff;letter-spacing:-.02em;max-width:760px;">
+        Internal AI Tools
+      </div>
+      <div class="reveal" style="font-size:clamp(22px,3vw,42px);line-height:1.15;font-weight:400;color:var(--r-sky);letter-spacing:-.01em;max-width:680px;margin-top:12px;">
+        AI Applications Built for Daily Work
+      </div>
+      <p class="reveal" style="font-size:clamp(15px,1.5vw,20px);line-height:1.55;color:rgba(255,255,255,0.7);max-width:640px;margin-top:22px;">
+        A portfolio of AI-built internal applications designed to reduce manual work, improve visibility, and show what we can build quickly to optimize systems and team operations.
+      </p>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 2 â€” What These Applications Represent â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="2">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:380px;height:380px;top:-120px;right:-80px;transform:rotate(18deg);"></div>
+      <div class="geo-circle" style="width:440px;height:440px;bottom:-160px;left:-120px;"></div>
+    </div>
+    <div class="content">
+      <div class="section-label reveal">Executive Framing</div>
+      <h2 class="reveal" style="font-size:clamp(28px,4.2vw,54px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 22px;color:var(--r-dark-blue);">What These Applications Represent</h2>
+      <div class="g2-wide">
+        <div class="card p-8 reveal accent-left" style="padding:28px 32px;">
+          <div class="badge" style="font-size:0.92rem;padding:8px 16px;">What this portfolio is</div>
+          <p style="font-size:clamp(18px,1.8vw,25px);line-height:1.4;font-weight:600;margin-top:14px;color:var(--r-dark-blue);">Practical internal AI applications built around real team workflows.</p>
+          <ul style="font-size:clamp(15px,1.35vw,19px);line-height:1.55;color:var(--r-gray);margin-top:14px;padding-left:22px;">
+            <li>Focused on real pain points, not abstract demos.</li>
+            <li>Connected to existing tools: Slack, Jira, and Figma.</li>
+            <li>Designed to scale as reusable internal capability.</li>
+          </ul>
+        </div>
+        <div class="card p-8 reveal" style="padding:28px 32px;display:flex;flex-direction:column;">
+          <div class="badge">Why it matters</div>
+          <div class="card-tint accent-left" style="margin-top:14px;padding:24px 24px;flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-size:clamp(18px,1.65vw,26px);line-height:1.25;font-weight:700;margin-top:10px;color:var(--r-dark-blue);">Faster execution, less manual work, and better operational visibility.</div>
+          </div>
+        </div>
+      </div>
+      <div class="g3" style="margin-top:14px;">
+        <div class="card-tint reveal" style="padding:18px;border-radius:12px;border-left:4px solid var(--r-blue);">
+          <div class="badge">Efficiency</div>
+          <div style="font-size:18px;font-weight:700;margin-top:10px;color:var(--r-dark-blue);">Reduce manual effort</div>
+        </div>
+        <div class="card-tint reveal" style="padding:18px;border-radius:12px;border-left:4px solid var(--r-blue);">
+          <div class="badge">Access</div>
+          <div style="font-size:18px;font-weight:700;margin-top:10px;color:var(--r-dark-blue);">Make systems easier to use</div>
+        </div>
+        <div class="card-tint reveal" style="padding:18px;border-radius:12px;border-left:4px solid var(--r-blue);">
+          <div class="badge">Scale</div>
+          <div style="font-size:18px;font-weight:700;margin-top:10px;color:var(--r-dark-blue);">Build reusable capability</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 4 â€” Agenda â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide slide-dark" data-slide="3">
+    <div class="geo-bg">
+      <div class="title-diagonal"></div>
+      <div class="geo-rect" style="width:260px;height:260px;top:-70px;right:4%;transform:rotate(16deg);opacity:.5;"></div>
+      <div class="geo-circle" style="width:400px;height:400px;bottom:-140px;left:-80px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(25px,3.5vw,46px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 8px;color:#fff;">AI Tool Portfolio</h2>
+      <p class="reveal" style="font-size:clamp(13px,1.3vw,17px);color:rgba(255,255,255,0.72);margin-bottom:12px;max-width:none;white-space:nowrap;">Applications are organized into five categories to clarify where each tool fits in the internal AI ecosystem.</p>
+      <div class="g3" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+        <div class="reveal" style="padding:16px 18px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);">
+          <div style="font-size:20px;font-weight:700;margin-top:6px;color:#fff;">CalBot</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:8px;font-weight:600;">Team Coordination</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.62);margin-top:6px;">Automates team time-off and availability workflows.</div>
+        </div>
+        <div class="reveal" style="padding:16px 18px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);">
+          <div style="font-size:20px;font-weight:700;margin-top:6px;color:#fff;">DocBot</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:8px;font-weight:600;">Content Operations Platforms</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.62);margin-top:6px;">Turns static docs into AI-ready content.</div>
+        </div>
+        <div class="reveal" style="padding:16px 18px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);">
+          <div style="font-size:20px;font-weight:700;margin-top:6px;color:#fff;">DAM</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:8px;font-weight:600;">Content Operations Platforms</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.62);margin-top:6px;">AI for asset libraries, tagging, search, and content operations.</div>
+        </div>
+        <div class="reveal" style="padding:16px 18px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);">
+          <div style="font-size:20px;font-weight:700;margin-top:6px;color:#fff;">ReportBot</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:8px;font-weight:600;">Business Intelligence</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.62);margin-top:6px;">Self-service reporting and analytics through natural language.</div>
+        </div>
+        <div class="reveal" style="padding:16px 18px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);">
+          <div style="font-size:20px;font-weight:700;margin-top:6px;color:#fff;">SkillsBot</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:8px;font-weight:600;">AI Infrastructure</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.62);margin-top:6px;">Reusable AI capabilities through one shared connection.</div>
+        </div>
+        <div class="reveal" style="padding:16px 18px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);">
+          <div style="font-size:20px;font-weight:700;margin-top:6px;color:#fff;">Relay Agent</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:8px;font-weight:600;">AI Infrastructure</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.62);margin-top:6px;">AI-assisted intake, routing, and human-reviewed execution.</div>
+        </div>
+        <div class="reveal" style="padding:16px 18px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);grid-column:1 / -1;">
+          <div style="font-size:20px;font-weight:700;margin-top:6px;color:#fff;">DSBot</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:8px;font-weight:600;">Design Tools</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.62);margin-top:6px;">Instant design system access inside Claude, Cursor, and Slack.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 6 â€” CalBot â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="4">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:260px;height:260px;top:-70px;right:-50px;transform:rotate(18deg);"></div>
+      <div class="geo-circle" style="width:380px;height:380px;bottom:-130px;left:-80px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(26px,3.8vw,50px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 20px;color:var(--r-dark-blue);">CalBot</h2>
+      <div class="g2-wide">
+        <div class="card reveal" style="padding:26px 30px;">
+          <div class="badge">Team Coordination</div>
+          <p style="font-size:clamp(16px,1.6vw,22px);line-height:1.38;font-weight:700;margin-top:14px;color:var(--r-dark-blue);">Slack bot + web app that centralizes team availability data for visibility now and smarter automation later.</p>
+          <div class="pills" style="margin-top:18px;">
+            <div class="pill">Check who is out</div>
+            <div class="pill">Submit time off</div>
+            <div class="pill">Daily Slack updates</div>
+            <div class="pill">Manager notifications</div>
+          </div>
+          <div class="card-tint accent-left" style="margin-top:18px;padding:16px 18px;border-radius:10px;">
+            <div class="section-label">Value</div>
+            <div style="font-size:clamp(16px,1.5vw,22px);font-weight:700;margin-top:6px;color:var(--r-dark-blue);">Creates a reusable availability signal that can power future automations.</div>
+          </div>
+        </div>
+        <div class="card reveal" style="padding:0;overflow:hidden;display:flex;align-items:stretch;">
+          <img class="shot" src="images/calbot-slide.png" alt="CalBot screenshot" style="min-height:100%;height:100%;width:100%;object-fit:cover;object-position:26% 22%;transform:scale(1.14);transform-origin:center;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 7 â€” DocBot â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="5">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:280px;height:280px;top:-80px;right:-60px;transform:rotate(15deg);"></div>
+      <div class="geo-circle" style="width:360px;height:360px;bottom:-130px;left:-90px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(26px,3.8vw,50px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 20px;color:var(--r-dark-blue);">DocBot</h2>
+      <div class="g2-wide-r">
+        <div class="card reveal" style="padding:0;overflow:hidden;display:flex;align-items:stretch;">
+          <img class="shot" src="images/docbot-slide.png" alt="DocBot screenshot" style="min-height:100%;height:100%;width:100%;object-fit:contain;object-position:center;background:#eef3f7;transform:scale(1.08);transform-origin:center;">
+        </div>
+        <div class="card reveal" style="padding:26px 30px;">
+          <div class="badge">Content Operations Platforms</div>
+          <p style="font-size:clamp(16px,1.6vw,22px);line-height:1.38;font-weight:700;margin-top:14px;color:var(--r-dark-blue);">Converts Word/PDF files into structured Markdown with built-in translation.</p>
+          <div class="card-tint accent-left" style="margin-top:14px;padding:14px 16px;border-radius:10px;">
+            <div class="section-label">Current scale</div>
+            <div style="font-size:clamp(22px,2.2vw,32px);font-weight:700;margin-top:6px;color:var(--r-dark-blue);">62,867 documents managed</div>
+          </div>
+          <ul style="font-size:clamp(13px,1.2vw,16px);line-height:1.6;color:var(--r-gray);margin-top:16px;padding-left:18px;">
+            <li>Supports teams managing large semiconductor PDF libraries.</li>
+            <li>Replaces static docs with searchable, maintainable web content.</li>
+            <li>Improves reuse, translation, and review workflows.</li>
+          </ul>
+          <div class="pills" style="margin-top:16px;">
+            <div class="pill">Auto translation</div>
+            <div class="pill">Document search</div>
+            <div class="pill">Vision AI enhancement</div>
+            <div class="pill">Internal link tracking</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 8 â€” DAM â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="6">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:300px;height:300px;top:-90px;right:-60px;transform:rotate(20deg);"></div>
+      <div class="geo-circle" style="width:400px;height:400px;bottom:-140px;left:-90px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(26px,3.8vw,50px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 20px;color:var(--r-dark-blue);">DAM</h2>
+      <div class="g2-wide">
+        <div class="card reveal" style="padding:26px 30px;">
+          <div class="badge">Content Operations Platforms</div>
+          <p style="font-size:clamp(16px,1.6vw,22px);line-height:1.38;font-weight:700;margin-top:14px;color:var(--r-dark-blue);">AI-powered asset library with search, auto-tagging, and duplicate detection.</p>
+          <div class="card-blue reveal" style="margin-top:18px;padding:18px 20px;border-radius:12px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--r-sky);">Operational impact</div>
+            <div style="font-size:clamp(28px,2.8vw,40px);font-weight:700;margin-top:6px;color:#fff;">31,000+</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.72);margin-top:4px;">images managed across product, marketing, and documentation</div>
+          </div>
+          <div class="pills" style="margin-top:16px;">
+            <div class="pill">Auto-tagged library</div>
+            <div class="pill">Image classification</div>
+            <div class="pill">Crop &amp; watermark</div>
+            <div class="pill">Revision history</div>
+            <div class="pill" style="grid-column:1 / -1;">Duplicate detection</div>
+          </div>
+        </div>
+        <div class="card reveal" style="padding:0;overflow:hidden;display:flex;align-items:stretch;">
+          <img class="shot" src="images/dam-slide.png" alt="DAM screenshot" style="min-height:100%;height:100%;width:100%;object-fit:contain;object-position:center;background:#eef3f7;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 9 â€” ReportBot â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="7">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:260px;height:260px;top:-70px;right:-40px;transform:rotate(18deg);"></div>
+      <div class="geo-circle" style="width:380px;height:380px;bottom:-130px;left:-80px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(26px,3.8vw,50px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 20px;color:var(--r-dark-blue);">ReportBot</h2>
+      <div class="g2-wide-r">
+        <div class="card reveal" style="padding:16px;"><img class="shot" src="images/reportbot-slide.png" alt="ReportBot screenshot"></div>
+        <div class="card reveal" style="padding:26px 30px;">
+          <div class="badge">Business Intelligence</div>
+          <p style="font-size:clamp(16px,1.6vw,22px);line-height:1.38;font-weight:700;margin-top:14px;color:var(--r-dark-blue);">Turns plain-English questions into SQL for Drupal and Google Analytics.</p>
+          <ul style="font-size:clamp(13px,1.2vw,16px);line-height:1.6;color:var(--r-gray);margin-top:16px;padding-left:18px;">
+            <li>Gives non-technical teams self-service access to site data.</li>
+            <li>Makes reporting faster without manual query writing.</li>
+            <li>Bridges conversational AI and structured business data.</li>
+          </ul>
+          <div class="pills" style="margin-top:16px;">
+            <div class="pill">Excel reports</div>
+            <div class="pill">Natural language chat</div>
+            <div class="pill">SQL viewer</div>
+            <div class="pill">Feature voting</div>
+            <div class="pill" style="grid-column:1 / -1;">Slack access</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 10 â€” SkillsBot â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="8">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:280px;height:280px;top:-80px;right:-60px;transform:rotate(16deg);"></div>
+      <div class="geo-circle" style="width:360px;height:360px;bottom:-120px;left:-80px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(26px,3.8vw,50px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 20px;color:var(--r-dark-blue);">SkillsBot</h2>
+      <div class="g2-wide">
+        <div class="card reveal" style="padding:26px 30px;">
+          <div class="badge">AI Infrastructure</div>
+          <p style="font-size:clamp(16px,1.6vw,22px);line-height:1.38;font-weight:700;margin-top:14px;color:var(--r-dark-blue);">Central skills and MCP library for reusable AI capabilities.</p>
+          <div class="card-tint accent-left" style="margin-top:18px;padding:16px 18px;border-radius:10px;">
+            <div class="section-label">Why it matters</div>
+            <div style="font-size:clamp(16px,1.5vw,22px);font-weight:700;margin-top:6px;color:var(--r-dark-blue);">Reduces fragmentation across prompts, configs, keys, and tools.</div>
+          </div>
+          <div class="pills" style="margin-top:16px;">
+            <div class="pill">Create new skills</div>
+            <div class="pill">Edit existing skills</div>
+            <div class="pill">Share skills</div>
+            <div class="pill">MCP library</div>
+            <div class="pill" style="grid-column:1 / -1;">One connection</div>
+          </div>
+        </div>
+        <div class="card reveal" style="padding:0;overflow:hidden;background:#fff;"><img class="shot" src="images/skillsbot-slide.png" alt="SkillsBot screenshot" style="width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.08);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 11 â€” DSBot â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="9">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:280px;height:280px;top:-80px;right:-60px;transform:rotate(16deg);"></div>
+      <div class="geo-circle" style="width:360px;height:360px;bottom:-120px;left:-80px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(26px,3.8vw,50px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 20px;color:var(--r-dark-blue);">DSBot</h2>
+      <div class="g2-wide">
+        <div class="card reveal" style="padding:26px 30px;">
+        <div class="badge">Design Tools</div>
+        <p style="font-size:clamp(16px,1.6vw,22px);line-height:1.38;font-weight:700;margin-top:14px;color:var(--r-dark-blue);">DSBot provides instant design-system guidance in Cursor, Claude Code, and Slack to speed up branded prototype work.</p>
+        <div class="card-tint accent-left" style="margin-top:14px;padding:14px 16px;border-radius:10px;">
+          <div class="section-label">Business outcome</div>
+          <div style="font-size:clamp(16px,1.45vw,21px);font-weight:700;margin-top:6px;color:var(--r-dark-blue);">Faster UI decisions with more consistent implementation.</div>
+        </div>
+        <div class="pills" style="margin-top:16px;">
+          <div class="pill">Live design context</div>
+          <div class="pill">Prototype generation</div>
+          <div class="pill">Consistent UX decisions</div>
+          <div class="pill">Shared design language</div>
+        </div>
+      </div>
+        <div class="card reveal" style="padding:0;overflow:hidden;display:flex;align-items:stretch;">
+        <div class="card reveal" style="padding:10px;overflow:hidden;background:#fff;min-height:320px;display:none;">
+          <img class="shot" src="images/dsbot-workflow-slide.png" alt="DSBot workflow screenshot" style="width:100%;height:100%;object-fit:cover;object-position:top center;">
+        </div>
+        <div class="reveal" style="padding:0;overflow:hidden;min-height:320px;width:100%;">
+          <img class="shot" src="images/dsbot-slide.png" alt="DSBot prototype screenshot" style="width:100%;height:100%;object-fit:cover;object-position:top center;">
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 12 â€” Relay Agent â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide" data-slide="10">
+    <div class="geo-bg">
+      <div class="geo-rect" style="width:300px;height:300px;top:-80px;right:-60px;transform:rotate(18deg);"></div>
+      <div class="geo-circle" style="width:380px;height:380px;bottom:-130px;left:-80px;"></div>
+    </div>
+    <div class="content">
+      <h2 class="reveal" style="font-size:clamp(26px,3.8vw,50px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:8px 0 20px;color:var(--r-dark-blue);">Relay Agent</h2>
+      <div class="g2-wide-r">
+        <div class="card reveal" style="padding:0;overflow:hidden;background:#fff;"><img class="shot" src="images/relay-agent-slide.png" alt="Relay Agent screenshot" style="width:100%;height:100%;object-fit:cover;object-position:center 12%;transform:scale(1.28);clip-path:inset(5% 4% 6% 4%);"></div>
+        <div class="card reveal" style="padding:26px 30px;">
+          <div class="badge">AI Infrastructure</div>
+          <p style="font-size:clamp(16px,1.6vw,22px);line-height:1.38;font-weight:700;margin-top:14px;color:var(--r-dark-blue);">Receives requests, answers from a knowledge base, and routes the rest for approval.</p>
+          <ul style="font-size:clamp(13px,1.2vw,16px);line-height:1.6;color:var(--r-gray);margin-top:16px;padding-left:18px;">
+            <li>Handles feature requests, bugs, access, updates, and roadmap questions.</li>
+            <li>Keeps a human approver in the loop before dispatch.</li>
+            <li>Connects intake and delivery.</li>
+          </ul>
+          <div class="pills" style="margin-top:16px;">
+            <div class="pill">Idea to deployed</div>
+            <div class="pill">One approval</div>
+            <div class="pill">Continuous flow</div>
+            <div class="pill">Requests, bugs, access</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â• SLIDE 13 â€” Closing â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="slide slide-dark" data-slide="11">
+    <div class="geo-bg">
+      <div class="title-diagonal"></div>
+      <div class="geo-rect" style="width:300px;height:300px;top:-80px;right:4%;transform:rotate(20deg);opacity:.5;"></div>
+      <div class="geo-circle" style="width:480px;height:480px;bottom:-160px;left:-100px;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+      <div class="section-label reveal">Closing message</div>
+      <h2 class="reveal" style="font-size:clamp(28px,4.5vw,62px);line-height:1.04;font-weight:700;letter-spacing:-.02em;margin:10px 0 20px;color:#fff;">From demos to internal products</h2>
+      <div class="g2-wide">
+        <div class="reveal" style="padding:26px 28px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:14px;border-left:4px solid var(--r-sky);display:flex;flex-direction:column;justify-content:center;">
+          <ul style="font-size:clamp(17px,1.75vw,25px);line-height:1.48;color:rgba(255,255,255,0.9);margin-top:20px;padding-left:22px;">
+            <li>We can build practical internal AI tools around real pain points.</li>
+            <li>These concepts already show value across key workflows.</li>
+          </ul>
+        </div>
+        <div class="reveal" style="padding:26px 28px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:14px;">
+          <div class="section-label">Next move</div>
+          <div style="font-size:clamp(20px,2.2vw,32px);font-weight:700;margin-top:10px;color:#fff;">Prioritize, harden, and scale</div>
+          <div class="pills" style="margin-top:18px;grid-template-columns:1fr 1fr;gap:12px 14px;">
+            <div style="padding:12px 16px;border-radius:10px;font-size:.95rem;font-weight:600;background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.12);">Pick highest-value use cases</div>
+            <div style="padding:12px 16px;border-radius:10px;font-size:.95rem;font-weight:600;background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.12);">Standardize architecture</div>
+            <div style="padding:12px 16px;border-radius:10px;font-size:.95rem;font-weight:600;background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.12);">Expand integrations</div>
+            <div style="padding:12px 16px;border-radius:10px;font-size:.95rem;font-weight:600;background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.9);border:1px solid rgba(255,255,255,0.12);">Measure adoption</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.deck -->
+
+<!-- â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<div class="nav-controls">
+  <button class="nav-btn" onclick="changeSlide(-1)" aria-label="Previous slide">&#8249;</button>
+  <div class="slide-dots" id="dots"></div>
+  <button class="nav-btn" onclick="changeSlide(1)" aria-label="Next slide">&#8250;</button>
+  <span class="slide-counter" id="counter">1 / 11</span>
+</div>
+
+<script>
+let current = 1;
+const total = document.querySelectorAll('.slide').length;
+const dotsContainer = document.getElementById('dots');
+const counter = document.getElementById('counter');
+for (let i = 1; i <= total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 1 ? ' active' : '');
+  dot.onclick = () => goToSlide(i);
+  dotsContainer.appendChild(dot);
+}
+function goToSlide(n) {
+  const prev = document.querySelector('.slide.active');
+  const next = document.querySelector(`.slide[data-slide="${n}"]`);
+  if (prev) prev.classList.remove('active');
+  if (next) { next.classList.add('active'); animateSlide(next); }
+  current = n; updateNav();
+}
+function changeSlide(dir) { let n = current + dir; if (n < 1) n = total; if (n > total) n = 1; goToSlide(n); }
+function updateNav() { document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i+1===current)); counter.textContent = current + ' / ' + total; }
+document.addEventListener('keydown', (e) => { if (e.key==='ArrowRight'||e.key===' '){e.preventDefault();changeSlide(1);} if(e.key==='ArrowLeft'){e.preventDefault();changeSlide(-1);} });
+let touchStartX=0;
+document.addEventListener('touchstart',(e)=>{touchStartX=e.touches[0].clientX;});
+document.addEventListener('touchend',(e)=>{const diff=touchStartX-e.changedTouches[0].clientX;if(Math.abs(diff)>50)changeSlide(diff>0?1:-1);});
+function animateSlide(slide) {
+  slide.querySelectorAll('.reveal').forEach((el, i) => {
+    el.style.transition = 'none';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(14px)';
+    el.offsetHeight;
+    const delay = i * 0.055;
+    el.style.transition = `opacity 0.32s ease ${delay}s, transform 0.32s ease ${delay}s`;
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  });
+}
+// Particle canvas (title/closing slides)
+window.initParticles = function(canvas) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+  resize(); window.addEventListener('resize', resize);
+  const particles = Array.from({length:28}, ()=>({
+    x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+    vx:(Math.random()-.5)*0.2, vy:(Math.random()-.5)*0.2,
+    size: Math.random()*1.8+.4, alpha: Math.random()*.18+.06
+  }));
+  (function animate() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p => {
+      p.vx*=0.988; p.vy*=0.988; p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+      if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle=`rgba(164,223,255,${p.alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  })();
+};
+document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c));
+animateSlide(document.querySelector('.slide.active'));
+</script>
+</body>
+</html>
+
